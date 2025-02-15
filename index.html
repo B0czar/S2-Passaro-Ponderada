@@ -1,14 +1,13 @@
-<!-- Arquivo "index.html" -->
-
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+        <script src="contador.js"></script>
         <!-- Estamos carregando o Phaser diretamente de um CDN (Content Delivery Network). Isso significa que não precisamos baixar o arquivo manualmente e armazená-lo no projeto. O uso de um CDN melhora a velocidade de carregamento e pode reduzir o consumo de banda, pois o navegador pode reutilizar o arquivo se ele já foi carregado em outro site. E .min.js significa que o arquivo foi minificado, ou seja, seu tamanho foi reduzido para economizar espaço. -->
 
-        <title>Pássaros enjaulado</title> 
+        <title>Pássaros enjaulado</title>
         <!-- Título da página -->
 
         <link rel="icon" href="assets/web/favicon.svg" type="image/x-icon" />
@@ -44,15 +43,25 @@
             function preload() {
                 this.load.image("bg", "assets/bg/space.png"); //carrega a imagem de fundo
 
-                this.load.spritesheet("bird", "assets/spriteSheets/bird.png", {
-                    frameWidth: 75,
-                    frameHeight: 75,
-                }); //carrega o sprite do pássaro
+                this.load.spritesheet(
+                    "bird",
+                    "assets/spriteSheets/birdBW.png",
+                    {
+                        frameWidth: 75,
+                        frameHeight: 75,
+                    }
+                ); //carrega o sprite do pássaro
 
                 this.load.image("bar", "assets/bg/barsBg.png"); //carrega a "jaula"
+
+                this.load.audio("music", "assets/web/somPassaro.mp3"); //carrega a música de fundo
             }
 
             function create() {
+                this.music = this.sound.add("music", { loop: true }); //adiciona a música de fundo
+                this.music.play(); //toca a música de fundo
+                this.sound.context.resume(); //garante que o contexto de áudio seja retomado automaticamente
+
                 this.bg = this.add
                     .tileSprite(
                         0,
@@ -85,12 +94,31 @@
                         start: 0,
                         end: 7,
                     }), //(prettier esta deixando desse jeito)
-                    frameRate: 10,
+                    frameRate: 21,
                     repeat: -1,
                 });
 
                 passarinho.anims.play("fly", true); //animação do pássaro
                 window.addEventListener("resize", resizeGame); //adicionando listener para redimensionamento
+
+                contadorText = this.add.text(10, window.innerHeight - 30, "0", {
+                    fontSize: "20px",
+                    fill: "#fff",
+                });
+
+                // Adicionar efeito RGB contínuo e suave ao pássaro
+                var hue = 0;
+                this.time.addEvent({
+                    delay: 20,
+                    callback: function () {
+                        hue = (hue + 1) % 360;
+                        passarinho.setTint(
+                            Phaser.Display.Color.HSLToColor(hue / 360, 1, 0.5)
+                                .color
+                        );
+                    },
+                    loop: true,
+                });
             }
 
             function update() {
@@ -126,7 +154,13 @@
                     passarinho.y += 5;
                 }
                 //não sei se é a melhor lógica, mas funciona
+
+                contador++;
+                contadorText.setText((contador / 60).toFixed(2));
             }
+
+            var contador = 0;
+            var contadorText;
 
             function resizeGame() {
                 game.scale.resize(window.innerWidth, window.innerHeight);
@@ -139,6 +173,8 @@
                     window.innerHeight / 2
                 );
                 //função para redimensionar o jogo (peguei inspiração da internet)
+
+                contadorText.setPosition(10, window.innerHeight - 30);
             }
         </script>
     </body>
